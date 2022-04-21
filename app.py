@@ -104,7 +104,7 @@ class MainMeow(QWidget):
     
     def update(self):
         img = self.process.changeBrightness(self.image, self.brightness_value_now)
-        img = self.process.gamma(img, self.gamma_value_now)
+        img = self.process.changeGamma(img, self.gamma_value_now)
         img = self.process.changeBlur(img, self.blur_value_now)
         self.setPhoto(img)
 

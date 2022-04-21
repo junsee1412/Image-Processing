@@ -17,7 +17,7 @@ class Process:
         img = cv2.blur(img, kernel_size)
         return img
 
-    def gamma(self, img, value):
+    def changeGamma(self, img, value):
         value = value*0.1
         invGamma = 1.0 /value
         table = np.array([((i / 255.0) ** invGamma) * 255
