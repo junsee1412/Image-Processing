@@ -15,11 +15,27 @@ class MainMeow(QWidget):
 
         self.mwg.actionOpen.triggered.connect(self.loadImage)
         self.mwg.actionSave.triggered.connect(self.savePhoto)
-        self.mwg.horizontalSlider.valueChanged['int'].connect(self.brightness_value)
-        self.mwg.horizontalSlider_2.valueChanged['int'].connect(self.gamma_value)
-        self.mwg.horizontalSlider_3.valueChanged['int'].connect(self.blur_value)
         self.mwg.actionZoom_In.triggered.connect(self.on_zoom_in)
         self.mwg.actionZoom_Out.triggered.connect(self.on_zoom_out)
+
+        # tab 1
+        self.mwg.sliderBrightness.valueChanged['int'].connect(self.brightness_value)
+        self.mwg.sliderGamma.valueChanged['int'].connect(self.gamma_value)
+
+        # tab 2
+        self.mwg.sliderBlur.valueChanged['int'].connect(self.blur_value)
+        self.mwg.sliderGaussian.valueChanged['int'].connect(self.gauss_value)
+        self.mwg.slideMedian.valueChanged['int'].connect(self.medi_value)
+
+        # tab 3
+        self.mwg.radio_None.clicked.connect(self.radio_state)
+        self.mwg.radio_Bilateral.clicked.connect(self.radio_state)
+        self.mwg.radio_Box.clicked.connect(self.radio_state)
+        self.mwg.radio_Butter.clicked.connect(self.radio_state)
+        self.mwg.radio_Directional_1.clicked.connect(self.radio_state)
+        self.mwg.radio_Directional_2.clicked.connect(self.radio_state)
+        self.mwg.radio_Directional_3.clicked.connect(self.radio_state)
+        self.mwg.radio_Median_threshold.clicked.connect(self.radio_state)
 
         self.mwg.graphicsView.viewport().installEventFilter(self)
 
@@ -50,11 +66,16 @@ class MainMeow(QWidget):
     
     def reset(self):
         self.brightness_value_now = 0
+        self.gamma_value_now = 50
         self.blur_value_now = 0
-        self.gamma_value_now = 10
-        self.mwg.horizontalSlider.setValue(self.brightness_value_now)
-        self.mwg.horizontalSlider_2.setValue(self.gamma_value_now)
-        self.mwg.horizontalSlider_3.setValue(self.blur_value_now)
+        self.gauss_value_now = 1
+        self.medi_value_now = 1
+        self.mwg.radio_None.setChecked(True)
+        self.mwg.sliderBrightness.setValue(self.brightness_value_now)
+        self.mwg.sliderGamma.setValue(self.gamma_value_now)
+        self.mwg.sliderBlur.setValue(self.blur_value_now)
+        self.mwg.sliderGaussian.setValue(self.gauss_value_now)
+        self.mwg.slideMedian.setValue(self.medi_value_now)
 
     def loadImage(self):
         path = QFileDialog.getOpenFileName(self, "Open Image", self.directory, filter="Image (*.*)")[0]
@@ -82,14 +103,57 @@ class MainMeow(QWidget):
             self.brightness_value_now = value
             self.update()
     
+    def gamma_value(self, value):
+        if (self.path):
+            self.gamma_value_now = value
+            self.update()
+    
     def blur_value(self, value):
         if (self.path):
             self.blur_value_now = value
             self.update()
-    
-    def gamma_value(self, value):
+
+    def gauss_value(self, value):
         if (self.path):
-            self.gamma_value_now = value
+            self.gauss_value_now = value
+            self.update()
+
+    def medi_value(self, value):
+        if (self.path):
+            self.medi_value_now = value
+            self.update()
+
+    def radio_state(self):
+        if (self.path):
+            self.update()
+    
+    def filter_select(self, img):
+        if (self.mwg.radio_Bilateral.isChecked()):
+            img = self.process.filter_Bilateral(img)
+        elif (self.mwg.radio_Box.isChecked()):
+            img = self.process.filter_Box(img)
+        elif (self.mwg.radio_Butter.isChecked()):
+            img = self.process.filter_butter(img)
+        elif (self.mwg.radio_Directional_1.isChecked()):
+            img = self.process.filter_directional_1(img)
+        elif (self.mwg.radio_Directional_2.isChecked()):
+            img = self.process.filter_directional_2(img)
+        elif (self.mwg.radio_Directional_3.isChecked()):
+            img = self.process.filter_directional_3(img)
+        elif (self.mwg.radio_Median_threshold.isChecked()):
+            img = self.process.filter_Median_threshold(img)
+        return img
+    
+    def checkbox_state(self, btn):
+        if (self.path):
+            # if btn.text() == "Median":
+            #     if btn.isChecked() == True:
+            #         print(btn.isChecked())
+            #     else:
+            #         print(btn.isChecked())
+                
+            #     if btn.isChecked():
+            #         print("process") 
             self.update()
 
     def on_zoom_in(self):
@@ -103,9 +167,14 @@ class MainMeow(QWidget):
             self.mwg.graphicsView.scale(scale, scale)
     
     def update(self):
-        img = self.process.changeBrightness(self.image, self.brightness_value_now)
-        img = self.process.changeGamma(img, self.gamma_value_now)
-        img = self.process.changeBlur(img, self.blur_value_now)
+        img = self.process.change_Brightness(self.image, self.brightness_value_now)
+        img = self.process.change_Gamma(img, self.gamma_value_now)
+        img = self.process.change_Blur(img, self.blur_value_now)
+        img = self.process.change_Median(img, self.medi_value_now)
+        img = self.process.change_Gaussian(img, self.gauss_value_now)
+        img = self.filter_select(img)
+        # if (self.mwg.checkboxMeidan.isChecked()):
+        #     img = self.process.filterMedian(img)
         self.setPhoto(img)
 
     def savePhoto(self):
