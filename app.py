@@ -2,7 +2,9 @@ from PyQt5.QtCore import QEvent, Qt
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QGraphicsPixmapItem, QGraphicsScene, QFileDialog, qApp
 from gui.maingui import Ui_MainWindow
-from process import Process
+from process.smoothing import Smoothing
+from process.adjust import Adjust
+from process.filter import Filter
 import sys, os, cv2
 
 class MainMeow(QWidget):
@@ -19,7 +21,10 @@ class MainMeow(QWidget):
         self.mwg.actionZoom_Out.triggered.connect(self.on_zoom_out)
 
         # tab 1
-        self.mwg.sliderBrightness.valueChanged['int'].connect(self.brightness_value)
+        self.mwg.sliderBrightness.valueChanged['int'].connect(self.alpha_value)
+        self.mwg.sliderRed.valueChanged['int'].connect(self.red_value)
+        self.mwg.sliderGreen.valueChanged['int'].connect(self.green_value)
+        self.mwg.sliderBlue.valueChanged['int'].connect(self.blue_value)
         self.mwg.sliderGamma.valueChanged['int'].connect(self.gamma_value)
 
         # tab 2
@@ -30,20 +35,26 @@ class MainMeow(QWidget):
         # tab 3
         self.mwg.radio_None.clicked.connect(self.radio_state)
         self.mwg.radio_Bilateral.clicked.connect(self.radio_state)
+        self.mwg.radio_Blackwhite.clicked.connect(self.radio_state)
         self.mwg.radio_Box.clicked.connect(self.radio_state)
-        self.mwg.radio_Butter.clicked.connect(self.radio_state)
+        self.mwg.radio_Emboss.clicked.connect(self.radio_state)
         self.mwg.radio_Directional_1.clicked.connect(self.radio_state)
         self.mwg.radio_Directional_2.clicked.connect(self.radio_state)
         self.mwg.radio_Directional_3.clicked.connect(self.radio_state)
         self.mwg.radio_Median_threshold.clicked.connect(self.radio_state)
+        self.mwg.radio_Negative.clicked.connect(self.radio_state)
+        self.mwg.radio_Sepia.clicked.connect(self.radio_state)
 
         self.mwg.graphicsView.viewport().installEventFilter(self)
 
         self.mwg.actionQuit.triggered.connect(qApp.quit)
         
-        self.process = Process()
+        self.smoothing = Smoothing()
+        self.adjust = Adjust()
+        self.filter = Filter()
         self.path = None
         self.tmp = None
+        self.img = None
         self.reset()
         self.directory = os.path.expanduser("~")
     
@@ -65,17 +76,21 @@ class MainMeow(QWidget):
         return super().eventFilter(source, event)
     
     def reset(self):
-        self.brightness_value_now = 0
+        self.alpha_value_now = 100
+        self.red_value_now = 0
+        self.green_value_now = 0
+        self.blue_value_now = 0
         self.gamma_value_now = 50
         self.blur_value_now = 0
         self.gauss_value_now = 1
         self.medi_value_now = 1
         self.mwg.radio_None.setChecked(True)
-        self.mwg.sliderBrightness.setValue(self.brightness_value_now)
+        self.mwg.sliderBrightness.setValue(self.alpha_value_now)
         self.mwg.sliderGamma.setValue(self.gamma_value_now)
         self.mwg.sliderBlur.setValue(self.blur_value_now)
         self.mwg.sliderGaussian.setValue(self.gauss_value_now)
         self.mwg.slideMedian.setValue(self.medi_value_now)
+        self.mwg.tabWidget.setHidden(True)
 
     def loadImage(self):
         path = QFileDialog.getOpenFileName(self, "Open Image", self.directory, filter="Image (*.*)")[0]
@@ -86,6 +101,7 @@ class MainMeow(QWidget):
             self.setPhoto(self.image)
             name = os.path.basename(self.path)
             self.mwg.statusbar.showMessage(name)
+            self.mwg.tabWidget.setHidden(False)
 
     def setPhoto(self, image):
         self.tmp = image
@@ -98,9 +114,24 @@ class MainMeow(QWidget):
         scene.addItem(item)
         self.mwg.graphicsView.setScene(scene)
     
-    def brightness_value(self, value):
+    def alpha_value(self, value):
+        # if (self.path):
+        self.alpha_value_now = value
+        self.update()
+    
+    def red_value(self, value):
         if (self.path):
-            self.brightness_value_now = value
+            self.red_value_now = value
+            self.update()
+    
+    def green_value(self, value):
+        if (self.path):
+            self.green_value_now = value
+            self.update()
+    
+    def blue_value(self, value):
+        if (self.path):
+            self.blue_value_now = value
             self.update()
     
     def gamma_value(self, value):
@@ -129,19 +160,24 @@ class MainMeow(QWidget):
     
     def filter_select(self, img):
         if (self.mwg.radio_Bilateral.isChecked()):
-            img = self.process.filter_Bilateral(img)
+            img = self.filter.Bilateral(img)
         elif (self.mwg.radio_Box.isChecked()):
-            img = self.process.filter_Box(img)
-        elif (self.mwg.radio_Butter.isChecked()):
-            img = self.process.filter_butter(img)
+            img = self.filter.Box(img)
+        elif (self.mwg.radio_Blackwhite.isChecked()):
+            img = self.filter.Black_white(img)
         elif (self.mwg.radio_Directional_1.isChecked()):
-            img = self.process.filter_directional_1(img)
+            img = self.filter.Directional_1(img)
         elif (self.mwg.radio_Directional_2.isChecked()):
-            img = self.process.filter_directional_2(img)
+            img = self.filter.Directional_2(img)
         elif (self.mwg.radio_Directional_3.isChecked()):
-            img = self.process.filter_directional_3(img)
+            img = self.filter.Directional_3(img)
         elif (self.mwg.radio_Median_threshold.isChecked()):
-            img = self.process.filter_Median_threshold(img)
+            img = self.filter.Median_threshold(img)
+        elif (self.mwg.radio_Negative.isChecked()):
+            img = self.filter.Negative(img)
+        elif (self.mwg.radio_Sepia.isChecked()):
+            img = self.filter.Sepia(img)
+
         return img
     
     def checkbox_state(self, btn):
@@ -167,14 +203,12 @@ class MainMeow(QWidget):
             self.mwg.graphicsView.scale(scale, scale)
     
     def update(self):
-        img = self.process.change_Brightness(self.image, self.brightness_value_now)
-        img = self.process.change_Gamma(img, self.gamma_value_now)
-        img = self.process.change_Blur(img, self.blur_value_now)
-        img = self.process.change_Median(img, self.medi_value_now)
-        img = self.process.change_Gaussian(img, self.gauss_value_now)
+        img = self.adjust.change_Color(self.image, self.red_value_now, self.green_value_now, self.blue_value_now, self.alpha_value_now)
+        img = self.adjust.change_Gamma(img, self.gamma_value_now)
+        img = self.smoothing.change_Blur(img, self.blur_value_now)
+        img = self.smoothing.change_Median(img, self.medi_value_now)
+        img = self.smoothing.change_Gaussian(img, self.gauss_value_now)
         img = self.filter_select(img)
-        # if (self.mwg.checkboxMeidan.isChecked()):
-        #     img = self.process.filterMedian(img)
         self.setPhoto(img)
 
     def savePhoto(self):

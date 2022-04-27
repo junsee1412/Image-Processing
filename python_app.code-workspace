@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../Image-Processing-with-OpenCV-Python-and-PyQt5"
+		},
+		{
+			"path": "../../python/Meow-d"
+		},
+		{
+			"path": "../simpleImageEdtor"
+		}
+	],
+	"settings": {}
+}
