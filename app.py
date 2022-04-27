@@ -1,5 +1,6 @@
+from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import QEvent, Qt
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtGui import QImage, QPixmap, QMouseEvent
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QGraphicsPixmapItem, QGraphicsScene, QFileDialog, qApp
 from gui.maingui import Ui_MainWindow
 from process.smoothing import Smoothing
@@ -70,9 +71,6 @@ class MainMeow(QWidget):
                 self.mwg.graphicsView.scale(scale, scale)
 
                 return True
-        # elif (event.type() == QEvent.GraphicsSceneMousePress):
-        #     pass
-            # ...
         return super().eventFilter(source, event)
     
     def reset(self):
@@ -115,9 +113,9 @@ class MainMeow(QWidget):
         self.mwg.graphicsView.setScene(scene)
     
     def alpha_value(self, value):
-        # if (self.path):
-        self.alpha_value_now = value
-        self.update()
+        if (self.path):
+            self.alpha_value_now = value
+            self.update()
     
     def red_value(self, value):
         if (self.path):
@@ -181,16 +179,7 @@ class MainMeow(QWidget):
         return img
     
     def checkbox_state(self, btn):
-        if (self.path):
-            # if btn.text() == "Median":
-            #     if btn.isChecked() == True:
-            #         print(btn.isChecked())
-            #     else:
-            #         print(btn.isChecked())
-                
-            #     if btn.isChecked():
-            #         print("process") 
-            self.update()
+        self.update()
 
     def on_zoom_in(self):
         if (self.path):

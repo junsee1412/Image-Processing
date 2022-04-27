@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>724</width>
-    <height>565</height>
+    <width>944</width>
+    <height>558</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -55,19 +55,6 @@
          <widget class="QLabel" name="label_6">
           <property name="text">
            <string>Red:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="9" column="0">
-         <widget class="QSlider" name="sliderGamma">
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="value">
-           <number>1</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
           </property>
          </widget>
         </item>
@@ -153,6 +140,19 @@
           </property>
           <property name="maximum">
            <number>100</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="10" column="0">
+         <widget class="QSlider" name="sliderGamma">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="value">
+           <number>50</number>
           </property>
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -338,11 +338,6 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_4">
-       <attribute name="title">
-        <string>Page</string>
-       </attribute>
-      </widget>
      </widget>
     </item>
     <item row="0" column="0">
@@ -355,8 +350,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>482</width>
-         <height>453</height>
+         <width>662</width>
+         <height>446</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_2">
@@ -374,7 +369,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>724</width>
+     <width>944</width>
      <height>26</height>
     </rect>
    </property>
@@ -413,11 +408,30 @@
    <addaction name="actionZoom_In"/>
    <addaction name="actionZoom_Out"/>
   </widget>
+  <widget class="QToolBar" name="Tools">
+   <property name="windowTitle">
+    <string>toolBar_2</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>LeftToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionCursor"/>
+   <addaction name="actionPen"/>
+   <addaction name="actionEraser"/>
+   <addaction name="actionMove"/>
+   <addaction name="actionCrop"/>
+   <addaction name="actionBrush"/>
+   <addaction name="actionFillColor"/>
+   <addaction name="actionPicker"/>
+  </widget>
   <action name="actionOpen">
    <property name="icon">
     <iconset>
-     <normaloff>icons/icons8-edit-image-48.png</normaloff>
-     <normalon>icons/gnome-mime-image.png</normalon>icons/icons8-edit-image-48.png</iconset>
+     <normaloff>icons/icons8-opened-folder-100.png</normaloff>
+     <normalon>icons/gnome-mime-image.png</normalon>icons/icons8-opened-folder-100.png</iconset>
    </property>
    <property name="text">
     <string>Open</string>
@@ -429,8 +443,8 @@
   <action name="actionSave">
    <property name="icon">
     <iconset>
-     <normaloff>icons/icons8-save-48.png</normaloff>
-     <normalon>icons/folder_color_green.png</normalon>icons/icons8-save-48.png</iconset>
+     <normaloff>icons/icons8-save-100.png</normaloff>
+     <normalon>icons/folder_color_green.png</normalon>icons/icons8-save-100.png</iconset>
    </property>
    <property name="text">
     <string>Save as</string>
@@ -440,6 +454,10 @@
    </property>
   </action>
   <action name="actionQuit">
+   <property name="icon">
+    <iconset>
+     <normaloff>icons/icons8-close-window-100.png</normaloff>icons/icons8-close-window-100.png</iconset>
+   </property>
    <property name="text">
     <string>Quit</string>
    </property>
@@ -450,8 +468,8 @@
   <action name="actionAbout">
    <property name="icon">
     <iconset>
-     <normaloff>icons/icons8-about-48.png</normaloff>
-     <normalon>icons/stock_addressbook.png</normalon>icons/icons8-about-48.png</iconset>
+     <normaloff>icons/icons8-info-96.png</normaloff>
+     <normalon>icons/stock_addressbook.png</normalon>icons/icons8-info-96.png</iconset>
    </property>
    <property name="text">
     <string>About</string>
@@ -460,7 +478,7 @@
   <action name="actionZoom_In">
    <property name="icon">
     <iconset>
-     <normaloff>icons/icons8-zoom-in-48.png</normaloff>icons/icons8-zoom-in-48.png</iconset>
+     <normaloff>icons/icons8-zoom-in-100.png</normaloff>icons/icons8-zoom-in-100.png</iconset>
    </property>
    <property name="text">
     <string>Zoom In</string>
@@ -469,10 +487,82 @@
   <action name="actionZoom_Out">
    <property name="icon">
     <iconset>
-     <normaloff>icons/icons8-zoom-out-48.png</normaloff>icons/icons8-zoom-out-48.png</iconset>
+     <normaloff>icons/icons8-zoom-out-100.png</normaloff>icons/icons8-zoom-out-100.png</iconset>
    </property>
    <property name="text">
     <string>Zoom Out</string>
+   </property>
+  </action>
+  <action name="actionPen">
+   <property name="icon">
+    <iconset>
+     <normaloff>icons/icons8-pencil-drawing-100.png</normaloff>icons/icons8-pencil-drawing-100.png</iconset>
+   </property>
+   <property name="text">
+    <string>Pen</string>
+   </property>
+  </action>
+  <action name="actionPicker">
+   <property name="icon">
+    <iconset>
+     <normaloff>icons/icons8-color-dropper-100.png</normaloff>icons/icons8-color-dropper-100.png</iconset>
+   </property>
+   <property name="text">
+    <string>Picker</string>
+   </property>
+  </action>
+  <action name="actionMove">
+   <property name="icon">
+    <iconset>
+     <normaloff>icons/icons8-move-100.png</normaloff>icons/icons8-move-100.png</iconset>
+   </property>
+   <property name="text">
+    <string>Move</string>
+   </property>
+  </action>
+  <action name="actionFillColor">
+   <property name="icon">
+    <iconset>
+     <normaloff>icons/icons8-paint-bucket-100.png</normaloff>icons/icons8-paint-bucket-100.png</iconset>
+   </property>
+   <property name="text">
+    <string>FillColor</string>
+   </property>
+  </action>
+  <action name="actionCursor">
+   <property name="icon">
+    <iconset>
+     <normaloff>icons/icons8-cursor-100.png</normaloff>icons/icons8-cursor-100.png</iconset>
+   </property>
+   <property name="text">
+    <string>Cursor</string>
+   </property>
+  </action>
+  <action name="actionCrop">
+   <property name="icon">
+    <iconset>
+     <normaloff>icons/icons8-crop-100.png</normaloff>icons/icons8-crop-100.png</iconset>
+   </property>
+   <property name="text">
+    <string>Crop</string>
+   </property>
+  </action>
+  <action name="actionEraser">
+   <property name="icon">
+    <iconset>
+     <normaloff>icons/icons8-eraser-100.png</normaloff>icons/icons8-eraser-100.png</iconset>
+   </property>
+   <property name="text">
+    <string>Eraser</string>
+   </property>
+  </action>
+  <action name="actionBrush">
+   <property name="icon">
+    <iconset>
+     <normaloff>icons/icons8-makeup-brush-100.png</normaloff>icons/icons8-makeup-brush-100.png</iconset>
+   </property>
+   <property name="text">
+    <string>Brush</string>
    </property>
   </action>
  </widget>
