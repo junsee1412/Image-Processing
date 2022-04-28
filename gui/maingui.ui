@@ -408,7 +408,7 @@
    <addaction name="actionZoom_In"/>
    <addaction name="actionZoom_Out"/>
   </widget>
-  <widget class="QToolBar" name="Tools">
+  <widget class="QToolBar" name="tools">
    <property name="windowTitle">
     <string>toolBar_2</string>
    </property>
@@ -423,6 +423,8 @@
    <addaction name="actionEraser"/>
    <addaction name="actionMove"/>
    <addaction name="actionCrop"/>
+   <addaction name="actionRotateLeft"/>
+   <addaction name="actionRotateRight"/>
    <addaction name="actionBrush"/>
    <addaction name="actionFillColor"/>
    <addaction name="actionPicker"/>
@@ -494,6 +496,9 @@
    </property>
   </action>
   <action name="actionPen">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>icons/icons8-pencil-drawing-100.png</normaloff>icons/icons8-pencil-drawing-100.png</iconset>
@@ -503,6 +508,9 @@
    </property>
   </action>
   <action name="actionPicker">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>icons/icons8-color-dropper-100.png</normaloff>icons/icons8-color-dropper-100.png</iconset>
@@ -512,6 +520,9 @@
    </property>
   </action>
   <action name="actionMove">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>icons/icons8-move-100.png</normaloff>icons/icons8-move-100.png</iconset>
@@ -521,6 +532,9 @@
    </property>
   </action>
   <action name="actionFillColor">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>icons/icons8-paint-bucket-100.png</normaloff>icons/icons8-paint-bucket-100.png</iconset>
@@ -530,6 +544,9 @@
    </property>
   </action>
   <action name="actionCursor">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>icons/icons8-cursor-100.png</normaloff>icons/icons8-cursor-100.png</iconset>
@@ -539,6 +556,9 @@
    </property>
   </action>
   <action name="actionCrop">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>icons/icons8-crop-100.png</normaloff>icons/icons8-crop-100.png</iconset>
@@ -548,6 +568,9 @@
    </property>
   </action>
   <action name="actionEraser">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>icons/icons8-eraser-100.png</normaloff>icons/icons8-eraser-100.png</iconset>
@@ -557,12 +580,33 @@
    </property>
   </action>
   <action name="actionBrush">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normaloff>icons/icons8-makeup-brush-100.png</normaloff>icons/icons8-makeup-brush-100.png</iconset>
    </property>
    <property name="text">
     <string>Brush</string>
+   </property>
+  </action>
+  <action name="actionRotateLeft">
+   <property name="icon">
+    <iconset>
+     <normaloff>icons/icons8-rotate-left-100.png</normaloff>icons/icons8-rotate-left-100.png</iconset>
+   </property>
+   <property name="text">
+    <string>RotateLeft</string>
+   </property>
+  </action>
+  <action name="actionRotateRight">
+   <property name="icon">
+    <iconset>
+     <normaloff>icons/icons8-rotate-right-100.png</normaloff>icons/icons8-rotate-right-100.png</iconset>
+   </property>
+   <property name="text">
+    <string>RotateRight</string>
    </property>
   </action>
  </widget>

@@ -6,6 +6,7 @@ from gui.maingui import Ui_MainWindow
 from process.smoothing import Smoothing
 from process.adjust import Adjust
 from process.filter import Filter
+from process.tools import Tools
 import sys, os, cv2
 
 class MainMeow(QWidget):
@@ -21,6 +22,7 @@ class MainMeow(QWidget):
         self.mwg.actionZoom_In.triggered.connect(self.on_zoom_in)
         self.mwg.actionZoom_Out.triggered.connect(self.on_zoom_out)
 
+        # Tab
         # tab 1
         self.mwg.sliderBrightness.valueChanged['int'].connect(self.alpha_value)
         self.mwg.sliderRed.valueChanged['int'].connect(self.red_value)
@@ -46,15 +48,29 @@ class MainMeow(QWidget):
         self.mwg.radio_Negative.clicked.connect(self.radio_state)
         self.mwg.radio_Sepia.clicked.connect(self.radio_state)
 
+        # Tools
+        self.mwg.actionRotateLeft.triggered.connect(lambda:self.rotate(cv2.ROTATE_90_COUNTERCLOCKWISE))
+        self.mwg.actionRotateRight.triggered.connect(lambda:self.rotate(cv2.ROTATE_90_CLOCKWISE))
+        self.mwg.actionCursor.triggered.connect(lambda:self.pushAction(self.mwg.actionCursor))
+        self.mwg.actionPen.triggered.connect(lambda:self.pushAction(self.mwg.actionPen))
+        self.mwg.actionEraser.triggered.connect(lambda:self.pushAction(self.mwg.actionEraser))
+        self.mwg.actionMove.triggered.connect(lambda:self.pushAction(self.mwg.actionMove))
+        self.mwg.actionCrop.triggered.connect(lambda:self.pushAction(self.mwg.actionCrop))
+        self.mwg.actionBrush.triggered.connect(lambda:self.pushAction(self.mwg.actionBrush))
+        self.mwg.actionFillColor.triggered.connect(lambda:self.pushAction(self.mwg.actionFillColor))
+        self.mwg.actionPicker.triggered.connect(lambda:self.pushAction(self.mwg.actionPicker))
+        self.mwg.actionCursor.setChecked(True)
+
         self.mwg.graphicsView.viewport().installEventFilter(self)
+        self.mwg.scrollArea.setMouseTracking(True)
 
         self.mwg.actionQuit.triggered.connect(qApp.quit)
         
         self.smoothing = Smoothing()
         self.adjust = Adjust()
         self.filter = Filter()
+        self.tools = Tools()
         self.path = None
-        self.tmp = None
         self.img = None
         self.reset()
         self.directory = os.path.expanduser("~")
@@ -71,8 +87,20 @@ class MainMeow(QWidget):
                 self.mwg.graphicsView.scale(scale, scale)
 
                 return True
+
+        if (event.type() == QEvent.MouseMove):
+            print(f"x: {event.x()}, y: {event.y()}")
+
         return super().eventFilter(source, event)
     
+    def pushAction(self, action):
+        print(action.text())
+        for child in self.mwg.tools.actions():
+            if not child.isSeparator():
+                # if child != action:
+                child.setChecked(False)
+        action.toggle()
+
     def reset(self):
         self.alpha_value_now = 100
         self.red_value_now = 0
@@ -102,9 +130,8 @@ class MainMeow(QWidget):
             self.mwg.tabWidget.setHidden(False)
 
     def setPhoto(self, image):
-        self.tmp = image
         frame = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = QImage(frame, frame.shape[1],frame.shape[0],frame.strides[0],QImage.Format_RGB888)
+        image = QImage(frame, frame.shape[1], frame.shape[0], frame.strides[0], QImage.Format_RGB888)
         pixmap = QPixmap.fromImage(image)
 
         item = QGraphicsPixmapItem(pixmap)
@@ -190,6 +217,11 @@ class MainMeow(QWidget):
         if (self.path):
             scale = 0.8
             self.mwg.graphicsView.scale(scale, scale)
+
+    def rotate(self, angle):
+        if (self.path):
+            self.image = self.tools.rotate(self.image, angle)
+            self.update()
     
     def update(self):
         img = self.adjust.change_Color(self.image, self.red_value_now, self.green_value_now, self.blue_value_now, self.alpha_value_now)
