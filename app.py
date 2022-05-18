@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
-from PyQt5.QtCore import QEvent, Qt
-from PyQt5.QtGui import QImage, QPixmap, QMouseEvent
+from PyQt5.QtCore import QEvent, Qt, QPoint
+from PyQt5.QtGui import QImage, QPixmap, QMouseEvent, QPen
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QGraphicsPixmapItem, QGraphicsScene, QFileDialog, qApp
 from gui.maingui import Ui_MainWindow
 from process.smoothing import Smoothing
@@ -19,6 +19,7 @@ class MainMeow(QWidget):
 
         self.mwg.actionOpen.triggered.connect(self.loadImage)
         self.mwg.actionSave.triggered.connect(self.savePhoto)
+        self.mwg.actionSave_as.triggered.connect(self.saveasPhoto)
         self.mwg.actionZoom_In.triggered.connect(self.on_zoom_in)
         self.mwg.actionZoom_Out.triggered.connect(self.on_zoom_out)
 
@@ -48,6 +49,10 @@ class MainMeow(QWidget):
         self.mwg.radio_Negative.clicked.connect(self.radio_state)
         self.mwg.radio_Sepia.clicked.connect(self.radio_state)
 
+        self.mwg.listWidget.clicked.connect(self.selectItemQueue)
+        self.mwg.push_Remove.clicked.connect(self.removeItemQueue)
+        self.mwg.push_Clear.clicked.connect(self.clearQueue)
+
         # Tools
         self.mwg.actionRotateLeft.triggered.connect(lambda:self.rotate(cv2.ROTATE_90_COUNTERCLOCKWISE))
         self.mwg.actionRotateRight.triggered.connect(lambda:self.rotate(cv2.ROTATE_90_CLOCKWISE))
@@ -71,8 +76,15 @@ class MainMeow(QWidget):
         self.filter = Filter()
         self.tools = Tools()
         self.path = None
+        self.image = None
         self.img = None
+        self.tmp = None
+        # self.drawing = False
+        self.brushSize = 2
+        self.brushColor = Qt.black
+        self.lastPoint = QPoint()
         self.reset()
+        self.queueProcess = []
         self.directory = os.path.expanduser("~")
     
     def eventFilter(self, source, event):
@@ -90,8 +102,18 @@ class MainMeow(QWidget):
 
         if (event.type() == QEvent.MouseMove):
             print(f"x: {event.x()}, y: {event.y()}")
+            print(self.mwg.graphicsView.size().height())
+            print(self.mwg.graphicsView.size().width())
+            self.lastPoint = event.pos()
+            # if (self.mwg.actionPen.isChecked()):
+            #     self.draw(event.x(), event.y())
 
         return super().eventFilter(source, event)
+    
+    def draw(self, x, y):
+        pen = QPen(self.brushColor, self.brushSize, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+        self.mwg.graphicsView.scene().addLine(x, y, x, y, pen)
+        print("drax")
     
     def pushAction(self, action):
         print(action.text())
@@ -111,12 +133,25 @@ class MainMeow(QWidget):
         self.gauss_value_now = 1
         self.medi_value_now = 1
         self.mwg.radio_None.setChecked(True)
+        self.queueProcess = []
+        self.select = None
+
         self.mwg.sliderBrightness.setValue(self.alpha_value_now)
+        self.mwg.sliderRed.setValue(self.red_value_now)
+        self.mwg.sliderGreen.setValue(self.green_value_now)
+        self.mwg.sliderBlue.setValue(self.blue_value_now)
         self.mwg.sliderGamma.setValue(self.gamma_value_now)
+
         self.mwg.sliderBlur.setValue(self.blur_value_now)
         self.mwg.sliderGaussian.setValue(self.gauss_value_now)
         self.mwg.slideMedian.setValue(self.medi_value_now)
-        self.mwg.tabWidget.setHidden(True)
+
+        self.mwg.push_Remove.setDisabled(True)
+        if (not self.path):
+            self.mwg.toolBox.setHidden(True)
+        else:
+            self.image = cv2.imread(self.path)
+            self.setPhoto(self.image)
 
     def loadImage(self):
         path = QFileDialog.getOpenFileName(self, "Open Image", self.directory, filter="Image (*.*)")[0]
@@ -127,7 +162,7 @@ class MainMeow(QWidget):
             self.setPhoto(self.image)
             name = os.path.basename(self.path)
             self.mwg.statusbar.showMessage(name)
-            self.mwg.tabWidget.setHidden(False)
+            self.mwg.toolBox.setHidden(False)
 
     def setPhoto(self, image):
         frame = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -142,48 +177,86 @@ class MainMeow(QWidget):
     def alpha_value(self, value):
         if (self.path):
             self.alpha_value_now = value
+            if not self.process_Color in self.queueProcess:
+                self.queueProcess.append(self.process_Color)
             self.update()
     
     def red_value(self, value):
         if (self.path):
             self.red_value_now = value
+            if not self.process_Color in self.queueProcess:
+                self.queueProcess.append(self.process_Color)
             self.update()
     
     def green_value(self, value):
         if (self.path):
             self.green_value_now = value
+            if not self.process_Color in self.queueProcess:
+                self.queueProcess.append(self.process_Color)
             self.update()
     
     def blue_value(self, value):
         if (self.path):
             self.blue_value_now = value
+            if not self.process_Color in self.queueProcess:
+                self.queueProcess.append(self.process_Color)
             self.update()
     
     def gamma_value(self, value):
         if (self.path):
             self.gamma_value_now = value
+            if not self.process_Gamma in self.queueProcess:
+                self.queueProcess.append(self.process_Gamma)
             self.update()
     
     def blur_value(self, value):
         if (self.path):
             self.blur_value_now = value
+            if not self.process_Blur in self.queueProcess:
+                self.queueProcess.append(self.process_Blur)
             self.update()
 
     def gauss_value(self, value):
         if (self.path):
             self.gauss_value_now = value
+            if not self.process_Gaussian in self.queueProcess:
+                self.queueProcess.append(self.process_Gaussian)
             self.update()
 
     def medi_value(self, value):
         if (self.path):
             self.medi_value_now = value
+            if not self.process_Median in self.queueProcess:
+                self.queueProcess.append(self.process_Median)
             self.update()
 
     def radio_state(self):
         if (self.path):
+            if not self.process_Filter in self.queueProcess:
+                self.queueProcess.append(self.process_Filter)
             self.update()
     
-    def filter_select(self, img):
+    def process_Color(self, img):
+        img = self.adjust.change_Color(self.image, self.red_value_now, self.green_value_now, self.blue_value_now, self.alpha_value_now)
+        return img
+
+    def process_Gamma(self, img):
+        img = self.adjust.change_Gamma(img, self.gamma_value_now)
+        return img
+    
+    def process_Blur(self, img):
+        img = self.smoothing.change_Blur(img, self.blur_value_now)
+        return img
+    
+    def process_Median(self, img):
+        img = self.smoothing.change_Median(img, self.medi_value_now)
+        return img
+    
+    def process_Gaussian(self, img):
+        img = self.smoothing.change_Gaussian(img, self.gauss_value_now)
+        return img
+    
+    def process_Filter(self, img):
         if (self.mwg.radio_Bilateral.isChecked()):
             img = self.filter.Bilateral(img)
         elif (self.mwg.radio_Box.isChecked()):
@@ -204,6 +277,23 @@ class MainMeow(QWidget):
             img = self.filter.Sepia(img)
 
         return img
+
+    def removeItemQueue(self):
+        try:
+            del self.queueProcess[self.select]
+        except:
+            pass
+        self.mwg.push_Remove.setDisabled(True)
+        self.update()
+
+    def clearQueue(self):
+        self.queueProcess.clear()
+        self.update()
+
+    def selectItemQueue(self):
+        item = self.mwg.listWidget.currentRow()
+        self.select = item
+        self.mwg.push_Remove.setEnabled(True)
     
     def checkbox_state(self, btn):
         self.update()
@@ -224,21 +314,30 @@ class MainMeow(QWidget):
             self.update()
     
     def update(self):
-        img = self.adjust.change_Color(self.image, self.red_value_now, self.green_value_now, self.blue_value_now, self.alpha_value_now)
-        img = self.adjust.change_Gamma(img, self.gamma_value_now)
-        img = self.smoothing.change_Blur(img, self.blur_value_now)
-        img = self.smoothing.change_Median(img, self.medi_value_now)
-        img = self.smoothing.change_Gaussian(img, self.gauss_value_now)
-        img = self.filter_select(img)
-        self.setPhoto(img)
+        img = self.image
+        proc_list = self.mwg.listWidget
+        proc_list.clear()
+        for prs in self.queueProcess:
+            img = prs(img)
+            item = str(prs).split(" ")[2].split("_")[1]
+            proc_list.addItem(item)
 
+        self.setPhoto(img)
+        self.img = img
+    
     def savePhoto(self):
+        if (self.path):
+            cv2.imwrite(self.path,self.img)
+            self.reset()
+
+    def saveasPhoto(self):
         filename = QFileDialog.getSaveFileName(self, "Save Image", self.directory, filter=".jpg;;.png;;.tiff;;.bmp")
         if (filename[0]):
             self.path = ''.join(filename)
-            cv2.imwrite(self.path,self.tmp)
+            cv2.imwrite(self.path,self.img)
             name = os.path.basename(self.path)
             self.mwg.statusbar.showMessage(name)
+            self.reset()
 
     def show(self):
         self.main_win.show()
