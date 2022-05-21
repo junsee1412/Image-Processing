@@ -1,7 +1,8 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import QEvent, Qt, QPoint
-from PyQt5.QtGui import QImage, QPixmap, QMouseEvent, QPen
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QGraphicsPixmapItem, QGraphicsScene, QFileDialog, qApp
+from PyQt5.QtGui import QImage, QPixmap, QMouseEvent, QPen, QBrush, QPainter
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QGraphicsPixmapItem, QGraphicsScene, QGraphicsItem, QFileDialog, qApp
+from more_itertools import last
 from gui.maingui import Ui_MainWindow
 from process.smoothing import Smoothing
 from process.adjust import Adjust
@@ -79,17 +80,16 @@ class MainMeow(QWidget):
         self.image = None
         self.img = None
         self.tmp = None
-        # self.drawing = False
-        self.brushSize = 2
+        self.scene = None
+        self.brushSize = 1
         self.brushColor = Qt.black
         self.lastPoint = QPoint()
         self.reset()
         self.queueProcess = []
         self.directory = os.path.expanduser("~")
-    
+        
     def eventFilter(self, source, event):
         if (
-            # source == self.mwg.graphicsView.viewport() and 
             event.type() == QEvent.Wheel and
             event.modifiers() == Qt.ControlModifier):
                 if event.angleDelta().y() > 0:
@@ -101,18 +101,17 @@ class MainMeow(QWidget):
                 return True
 
         if (event.type() == QEvent.MouseMove):
-            print(f"x: {event.x()}, y: {event.y()}")
-            print(self.mwg.graphicsView.size().height())
-            print(self.mwg.graphicsView.size().width())
             self.lastPoint = event.pos()
-            # if (self.mwg.actionPen.isChecked()):
-            #     self.draw(event.x(), event.y())
+            print(self.scene.sceneRect())
+            print(self.mwg.scrollArea)
+            if (self.mwg.actionPen.isChecked()):
+                self.draw(event.x(), event.y())
 
         return super().eventFilter(source, event)
     
     def draw(self, x, y):
         pen = QPen(self.brushColor, self.brushSize, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-        self.mwg.graphicsView.scene().addLine(x, y, x, y, pen)
+        self.scene.addRect(x, y, 0.1, 0.1, pen)
         print("drax")
     
     def pushAction(self, action):
@@ -170,9 +169,9 @@ class MainMeow(QWidget):
         pixmap = QPixmap.fromImage(image)
 
         item = QGraphicsPixmapItem(pixmap)
-        scene = QGraphicsScene(self)
-        scene.addItem(item)
-        self.mwg.graphicsView.setScene(scene)
+        self.scene = QGraphicsScene(self)
+        self.scene.addItem(item)
+        self.mwg.graphicsView.setScene(self.scene)
     
     def alpha_value(self, value):
         if (self.path):
@@ -269,6 +268,8 @@ class MainMeow(QWidget):
             img = self.filter.Directional_2(img)
         elif (self.mwg.radio_Directional_3.isChecked()):
             img = self.filter.Directional_3(img)
+        elif (self.mwg.radio_Emboss.isChecked()):
+            img = self.filter.Emboss(img)
         elif (self.mwg.radio_Median_threshold.isChecked()):
             img = self.filter.Median_threshold(img)
         elif (self.mwg.radio_Negative.isChecked()):
