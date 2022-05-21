@@ -1,8 +1,6 @@
-from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import QEvent, Qt, QPoint
-from PyQt5.QtGui import QImage, QPixmap, QMouseEvent, QPen, QBrush, QPainter
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QGraphicsPixmapItem, QGraphicsScene, QGraphicsItem, QFileDialog, qApp
-from more_itertools import last
+from PyQt5.QtGui import QImage, QPixmap, QPen
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QGraphicsPixmapItem, QGraphicsScene, QFileDialog, qApp
 from gui.maingui import Ui_MainWindow
 from process.smoothing import Smoothing
 from process.adjust import Adjust
