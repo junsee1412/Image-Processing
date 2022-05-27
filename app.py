@@ -1,9 +1,9 @@
 from PyQt5.QtCore import QEvent, Qt, QPoint
-from PyQt5.QtGui import QImage, QPixmap, QPen
+from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QGraphicsPixmapItem, QGraphicsScene, QFileDialog, qApp
 from gui.maingui import Ui_MainWindow
 from process.smoothing import Smoothing
-from process.adjust import Adjust
+from process.light import Light
 from process.filter import Filter
 from process.tools import Tools
 import sys, os, cv2
@@ -22,48 +22,46 @@ class MainMeow(QWidget):
         self.mwg.actionZoom_In.triggered.connect(self.on_zoom_in)
         self.mwg.actionZoom_Out.triggered.connect(self.on_zoom_out)
 
-        # Tab
+        # Feature
         # tab 1
         self.mwg.sliderBrightness.valueChanged['int'].connect(self.alpha_value)
         self.mwg.sliderRed.valueChanged['int'].connect(self.red_value)
         self.mwg.sliderGreen.valueChanged['int'].connect(self.green_value)
         self.mwg.sliderBlue.valueChanged['int'].connect(self.blue_value)
         self.mwg.sliderGamma.valueChanged['int'].connect(self.gamma_value)
+        self.mwg.sliderContrast.valueChanged['int'].connect(self.contrast_value)
 
         # tab 2
         self.mwg.sliderBlur.valueChanged['int'].connect(self.blur_value)
         self.mwg.sliderGaussian.valueChanged['int'].connect(self.gauss_value)
+        self.mwg.sliderBox.valueChanged['int'].connect(self.box_value)
         self.mwg.slideMedian.valueChanged['int'].connect(self.medi_value)
+        self.mwg.check_Threshold.clicked.connect(lambda:self.medi_value(self.mwg.slideMedian.value()))
 
         # tab 3
         self.mwg.radio_None.clicked.connect(self.radio_state)
         self.mwg.radio_Bilateral.clicked.connect(self.radio_state)
         self.mwg.radio_Blackwhite.clicked.connect(self.radio_state)
-        self.mwg.radio_Box.clicked.connect(self.radio_state)
         self.mwg.radio_Emboss.clicked.connect(self.radio_state)
         self.mwg.radio_Directional_1.clicked.connect(self.radio_state)
         self.mwg.radio_Directional_2.clicked.connect(self.radio_state)
         self.mwg.radio_Directional_3.clicked.connect(self.radio_state)
-        self.mwg.radio_Median_threshold.clicked.connect(self.radio_state)
         self.mwg.radio_Negative.clicked.connect(self.radio_state)
         self.mwg.radio_Sepia.clicked.connect(self.radio_state)
 
+        # Queue
         self.mwg.listWidget.clicked.connect(self.selectItemQueue)
+        self.mwg.push_Original.clicked.connect(lambda:self.setPhoto(self.origin))
+        self.mwg.push_Changed.clicked.connect(lambda:self.setPhoto(self.img))
         self.mwg.push_Remove.clicked.connect(self.removeItemQueue)
         self.mwg.push_Clear.clicked.connect(self.clearQueue)
 
         # Tools
         self.mwg.actionRotateLeft.triggered.connect(lambda:self.rotate(cv2.ROTATE_90_COUNTERCLOCKWISE))
         self.mwg.actionRotateRight.triggered.connect(lambda:self.rotate(cv2.ROTATE_90_CLOCKWISE))
-        self.mwg.actionCursor.triggered.connect(lambda:self.pushAction(self.mwg.actionCursor))
-        self.mwg.actionPen.triggered.connect(lambda:self.pushAction(self.mwg.actionPen))
-        self.mwg.actionEraser.triggered.connect(lambda:self.pushAction(self.mwg.actionEraser))
-        self.mwg.actionMove.triggered.connect(lambda:self.pushAction(self.mwg.actionMove))
-        self.mwg.actionCrop.triggered.connect(lambda:self.pushAction(self.mwg.actionCrop))
-        self.mwg.actionBrush.triggered.connect(lambda:self.pushAction(self.mwg.actionBrush))
-        self.mwg.actionFillColor.triggered.connect(lambda:self.pushAction(self.mwg.actionFillColor))
-        self.mwg.actionPicker.triggered.connect(lambda:self.pushAction(self.mwg.actionPicker))
-        self.mwg.actionCursor.setChecked(True)
+        self.mwg.actionFlipH.triggered.connect(lambda:self.flip(0))
+        self.mwg.actionFlipV.triggered.connect(lambda:self.flip(1))
+        self.mwg.actionRemoveBg.triggered.connect(self.remove_background)
 
         self.mwg.graphicsView.viewport().installEventFilter(self)
         self.mwg.scrollArea.setMouseTracking(True)
@@ -71,13 +69,13 @@ class MainMeow(QWidget):
         self.mwg.actionQuit.triggered.connect(qApp.quit)
         
         self.smoothing = Smoothing()
-        self.adjust = Adjust()
+        self.light = Light()
         self.filter = Filter()
         self.tools = Tools()
         self.path = None
         self.image = None
         self.img = None
-        self.tmp = None
+        self.origin = None
         self.scene = None
         self.brushSize = 1
         self.brushColor = Qt.black
@@ -98,27 +96,7 @@ class MainMeow(QWidget):
 
                 return True
 
-        if (event.type() == QEvent.MouseMove):
-            self.lastPoint = event.pos()
-            print(self.scene.sceneRect())
-            print(self.mwg.scrollArea)
-            if (self.mwg.actionPen.isChecked()):
-                self.draw(event.x(), event.y())
-
         return super().eventFilter(source, event)
-    
-    def draw(self, x, y):
-        pen = QPen(self.brushColor, self.brushSize, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-        self.scene.addRect(x, y, 0.1, 0.1, pen)
-        print("drax")
-    
-    def pushAction(self, action):
-        print(action.text())
-        for child in self.mwg.tools.actions():
-            if not child.isSeparator():
-                # if child != action:
-                child.setChecked(False)
-        action.toggle()
 
     def reset(self):
         self.alpha_value_now = 100
@@ -126,7 +104,9 @@ class MainMeow(QWidget):
         self.green_value_now = 0
         self.blue_value_now = 0
         self.gamma_value_now = 50
+        self.contrast_value_now = 0
         self.blur_value_now = 0
+        self.box_value_now = 1
         self.gauss_value_now = 1
         self.medi_value_now = 1
         self.mwg.radio_None.setChecked(True)
@@ -138,9 +118,11 @@ class MainMeow(QWidget):
         self.mwg.sliderGreen.setValue(self.green_value_now)
         self.mwg.sliderBlue.setValue(self.blue_value_now)
         self.mwg.sliderGamma.setValue(self.gamma_value_now)
+        self.mwg.sliderContrast.setValue(self.contrast_value_now)
 
         self.mwg.sliderBlur.setValue(self.blur_value_now)
         self.mwg.sliderGaussian.setValue(self.gauss_value_now)
+        self.mwg.sliderBox.setValue(self.box_value_now)
         self.mwg.slideMedian.setValue(self.medi_value_now)
 
         self.mwg.push_Remove.setDisabled(True)
@@ -156,6 +138,7 @@ class MainMeow(QWidget):
             self.path = path
             self.reset()
             self.image = cv2.imread(self.path)
+            self.origin = self.image
             self.setPhoto(self.image)
             name = os.path.basename(self.path)
             self.mwg.statusbar.showMessage(name)
@@ -206,6 +189,13 @@ class MainMeow(QWidget):
                 self.queueProcess.append(self.process_Gamma)
             self.update()
     
+    def contrast_value(self, value):
+        if (self.path):
+            self.contrast_value_now = value
+            if not self.process_Contrast in self.queueProcess:
+                self.queueProcess.append(self.process_Contrast)
+            self.update()
+    
     def blur_value(self, value):
         if (self.path):
             self.blur_value_now = value
@@ -218,6 +208,13 @@ class MainMeow(QWidget):
             self.gauss_value_now = value
             if not self.process_Gaussian in self.queueProcess:
                 self.queueProcess.append(self.process_Gaussian)
+            self.update()
+
+    def box_value(self, value):
+        if (self.path):
+            self.box_value_now = value
+            if not self.process_Box in self.queueProcess:
+                self.queueProcess.append(self.process_Box)
             self.update()
 
     def medi_value(self, value):
@@ -233,12 +230,22 @@ class MainMeow(QWidget):
                 self.queueProcess.append(self.process_Filter)
             self.update()
     
+    def remove_background(self):
+        if (self.path):
+            if not self.process_RemoveBG in self.queueProcess:
+                self.queueProcess.append(self.process_RemoveBG)
+            self.update()
+    
     def process_Color(self, img):
-        img = self.adjust.change_Color(self.image, self.red_value_now, self.green_value_now, self.blue_value_now, self.alpha_value_now)
+        img = self.light.change_Color(self.image, self.red_value_now, self.green_value_now, self.blue_value_now, self.alpha_value_now)
         return img
 
     def process_Gamma(self, img):
-        img = self.adjust.change_Gamma(img, self.gamma_value_now)
+        img = self.light.change_Gamma(img, self.gamma_value_now)
+        return img
+
+    def process_Contrast(self, img):
+        img = self.light.change_Contrast(img, self.contrast_value_now)
         return img
     
     def process_Blur(self, img):
@@ -246,7 +253,11 @@ class MainMeow(QWidget):
         return img
     
     def process_Median(self, img):
-        img = self.smoothing.change_Median(img, self.medi_value_now)
+        img = self.smoothing.change_Median(img, self.medi_value_now, self.mwg.check_Threshold.isChecked())
+        return img
+
+    def process_Box(self, img):
+        img = self.smoothing.change_Box(img, self.box_value_now)
         return img
     
     def process_Gaussian(self, img):
@@ -256,8 +267,6 @@ class MainMeow(QWidget):
     def process_Filter(self, img):
         if (self.mwg.radio_Bilateral.isChecked()):
             img = self.filter.Bilateral(img)
-        elif (self.mwg.radio_Box.isChecked()):
-            img = self.filter.Box(img)
         elif (self.mwg.radio_Blackwhite.isChecked()):
             img = self.filter.Black_white(img)
         elif (self.mwg.radio_Directional_1.isChecked()):
@@ -268,13 +277,15 @@ class MainMeow(QWidget):
             img = self.filter.Directional_3(img)
         elif (self.mwg.radio_Emboss.isChecked()):
             img = self.filter.Emboss(img)
-        elif (self.mwg.radio_Median_threshold.isChecked()):
-            img = self.filter.Median_threshold(img)
         elif (self.mwg.radio_Negative.isChecked()):
             img = self.filter.Negative(img)
         elif (self.mwg.radio_Sepia.isChecked()):
             img = self.filter.Sepia(img)
 
+        return img
+    
+    def process_RemoveBG(self, img):
+        img = self.tools.bgremove(img)
         return img
 
     def removeItemQueue(self):
@@ -286,6 +297,7 @@ class MainMeow(QWidget):
         self.update()
 
     def clearQueue(self):
+        self.reset()
         self.queueProcess.clear()
         self.update()
 
@@ -310,6 +322,11 @@ class MainMeow(QWidget):
     def rotate(self, angle):
         if (self.path):
             self.image = self.tools.rotate(self.image, angle)
+            self.update()
+    
+    def flip(self, code):
+        if (self.path):
+            self.image = self.tools.flip(self.image, code)
             self.update()
     
     def update(self):
