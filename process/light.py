@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-class Adjust:
+class Light:
     def change_Color(self, img, red, green, blue, alpha):
         img = cv2.convertScaleAbs(img, alpha=alpha*0.01)
         b, g, r = cv2.split(img)
@@ -23,4 +23,11 @@ class Adjust:
             for i in np.arange(0, 256)]).astype("uint8")
 
         img = cv2.LUT(img, table)
+        return img
+    
+    def change_Contrast(self, img, value):
+        f = 131*(value + 127)/(127*(131-value))
+        alpha_c = f
+        gamma_c = 127*(1-f)
+        img = cv2.addWeighted(img, alpha_c, img, 0, gamma_c)
         return img

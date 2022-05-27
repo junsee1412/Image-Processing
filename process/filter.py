@@ -20,10 +20,6 @@ class Filter:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
         return img
-
-    def Box(self, img):
-        img = cv2.boxFilter(img, -1,(20,20))
-        return img
         
     def Directional_1(self, img):
         kernel = np.ones((2, 2), np.float32) / 9
@@ -52,12 +48,6 @@ class Filter:
         res = cv2.add(cv2.filter2D(gray, -1, kernel), y)
 
         return res
-
-    def Median_threshold(self, img):
-        grayscaled = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        img = cv2.medianBlur(img,5)
-        retval, threshold = cv2.threshold(grayscaled,125,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-        return threshold
     
     def Negative(self, img):
         img = cv2.bitwise_not(img)
